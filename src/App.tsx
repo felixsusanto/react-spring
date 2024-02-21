@@ -1,38 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
-import "./App.css";
+import { animated, useSpring, easings } from "@react-spring/web";
+
+const listOfCities = [
+  "Tokyo, Japan",
+  "Ottawa, Canada",
+  "Cairo, Egypt",
+  "Buenos Aires, Argentina",
+  "Lisbon, Portugal",
+  "Bangkok, Thailand",
+  "Nairobi, Kenya",
+  "Dublin, Ireland",
+  "Helsinki, Finland",
+  "Santiago, Chile",
+];
+interface AnimatedTextProps {
+  fromText?: string;
+  toText: string;
+}
+const AnimatedText: React.FC<AnimatedTextProps> = (props) => {
+  const [from, setFrom] = useState<number[]>([]);
+  const [to, setTo] = useState<number[]>([]);
+  const styles = useSpring({
+    from: { text: from },
+    to: { text: to },
+    config: {
+      easing: easings.steps(10),
+    },
+  });
+  useEffect(() => {
+    const maxLen = Math.max(props.fromText?.length || 0, props.toText.length);
+    const newFrom = Array(maxLen)
+      .fill(32)
+      .map((v, i) => {
+        return props.fromText?.charCodeAt(i) || v;
+      });
+    const newTo = Array(maxLen)
+      .fill(32)
+      .map((v, i) => {
+        return props.toText.charCodeAt(i) || v;
+      });
+    setFrom(newFrom);
+    setTo(newTo);
+  }, [props.toText, props.fromText]);
+  return (
+    <animated.code>
+      {styles.text.to((...v) =>
+        String.fromCharCode(...v.map((va) => parseInt(va + ""))),
+      )}
+    </animated.code>
+  );
+};
 
 function App() {
   const [count, setCount] = useState(0);
+  const [toggle, setToggle] = useState(false);
+
+  const str = ["Kranoyarsk, Russia", "Belarus, Minsk"];
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <h2>On CodeSandbox!</h2>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
+        <button
+          onClick={() => {
+            setCount((count) => (count + 1) % listOfCities.length);
+            setToggle(!toggle);
+          }}
+        >
           count is {count}
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR.
-        </p>
-
-        <p>
-          Tip: you can use the inspector button next to address bar to click on
-          components in the preview and open the code in the editor!
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <AnimatedText
+        fromText={listOfCities[count - 1]}
+        toText={listOfCities[count]}
+      />
     </div>
   );
 }
